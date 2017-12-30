@@ -6,10 +6,23 @@
 
 ;; definition of structures for NUMEX programs
 
-;; Add the missing ones
-
 (struct int  (num)    #:transparent)  ;; a constant number, e.g., (int 17)
+(struct var  (str)    #:transparent)
 (struct add  (e1 e2)  #:transparent)  ;; add two expressions
+(struct mult (e1 e2)  #:transparent)  ;; multiply two expressions
+(struct neg  (num)    #:transparent)
+
+
+(struct islthan (e1 e2)    #:transparent)
+(struct ifzero (e1 e2 e3)    #:transparent)
+(struct ifgthan (e1 e2 e3 e4)    #:transparent)
+
+(struct mlet (s e1 e2)    #:transparent)
+
+
+(struct apair (head tail) #:transparent)
+(struct first (e1) #:transparent)
+(struct second (e1) #:transparent)
 
 
 (struct fun  (nameopt formal body) #:transparent) ;; a recursive(?) 1-argument function
@@ -20,11 +33,12 @@
 (struct ismunit (e)     #:transparent) ;; if e1 is unit then 1 else 0
 
 ;; a closure is not in "source" programs; it is what functions evaluate to
-(struct closure (env fun) #:transparent) 
+(struct closure (env fun) #:transparent)
+
+
 
 ;; Problem 1
 
-(struct apair (head tail) #:transparent)
 (define (racketlist->numexlist xs)
   (cond [(null? xs) (munit)]
         [else       (apair (car xs) (racketlist->numexlist (cdr xs)))]))
@@ -41,32 +55,32 @@
 ;; Complete this function
 ;(define (envlookup env str)
 ;  (cond [(null? env) (error "unbound variable during evaluation" str)]
-;  		"CHANGE" 
+;  		"CHANGE"
 ;		))
 
-;; Do NOT change the two cases given to you.  
-;; DO add more cases for other kinds of NUMEX expressions.
-;; We will test eval-under-env by calling it directly even though
-;; "in real life" it would be a helper function of eval-exp.
-;(define (eval-under-env e env)
-  ;(cond [(var? e) 
-   ;      (envlookup env (var-string e))]
-    ;    [(add? e) 
-     ;    (let ([v1 (eval-under-env (add-e1 e) env)]
-      ;         [v2 (eval-under-env (add-e2 e) env)])
-       ;    (if (and (int? v1)
-        ;            (int? v2))
-         ;      (int (+ (int-num v1) 
-          ;             (int-num v2)))
-           ;    (error "NUMEX addition applied to non-number")))]
-        ;; CHANGE add more cases here
-     ;   [#t (error (format "bad NUMEX expression: ~v" e))]))
+; Do NOT change the two cases given to you.
+; DO add more cases for other kinds of NUMEX expressions.
+; We will test eval-under-env by calling it directly even though
+; "in real life" it would be a helper function of eval-exp.
+(define (eval-under-env e env)
+  (cond [(var? e)
+         (envlookup env (var-string e))]
+        [(add? e)
+         (let ([v1 (eval-under-env (add-e1 e) env)]
+               [v2 (eval-under-env (add-e2 e) env)])
+           (if (and (int? v1)
+                    (int? v2))
+             (int (+ (int-num v1)
+                     (int-num v2)))
+             (error "NUMEX addition applied to non-number")))]
+        ; CHANGE add more cases here
+        [#t (error (format "bad NUMEX expression: ~v" e))]))
 
-;; Do NOT change
-;(define (eval-exp e)
- ; (eval-under-env e null))
-        
-;; Problem 3
+; Do NOT change
+(define (eval-exp e)
+  (eval-under-env e null))
+
+; Problem 3
 
 ;(define (ifmunit e1 e2 e3) "CHANGE")
 
