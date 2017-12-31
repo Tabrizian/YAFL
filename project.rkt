@@ -1,13 +1,12 @@
 ;; PL Project - Fall 2017
 ;; NUMEX interpreter
 
-#lang racket
-(provide (all-defined-out)) ;; so we can put tests in a second file
+;(provide (all-defined-out)) ;; so we can put tests in a second file
 
 ;; definition of structures for NUMEX programs
 
 (struct int  (num)    #:transparent)  ;; a constant number, e.g., (int 17)
-(struct var  (str)    #:transparent)
+(struct var  (string)    #:transparent)
 (struct add  (e1 e2)  #:transparent)  ;; add two expressions
 (struct mult (e1 e2)  #:transparent)  ;; multiply two expressions
 (struct neg  (num)    #:transparent)
@@ -53,10 +52,10 @@
 
 ;; lookup a variable in an environment
 ;; Complete this function
-;(define (envlookup env str)
-;  (cond [(null? env) (error "unbound variable during evaluation" str)]
-;  		"CHANGE"
-;		))
+(define (envlookup env str)
+  (cond [(null? env) (error "unbound variable during evaluation" str)]
+  		[else "CHANGE"]
+		))
 
 ; Do NOT change the two cases given to you.
 ; DO add more cases for other kinds of NUMEX expressions.
@@ -73,6 +72,11 @@
              (int (+ (int-num v1)
                      (int-num v2)))
              (error "NUMEX addition applied to non-number")))]
+        [(int? e)
+         (let ([v (int-num e)])
+           (if (integer? v)
+             e
+             (error "NUMXEX int applied to non-number"]
         ; CHANGE add more cases here
         [#t (error (format "bad NUMEX expression: ~v" e))]))
 
