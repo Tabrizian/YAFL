@@ -1,7 +1,8 @@
 ;; PL Project - Fall 2017
 ;; NUMEX interpreter
 
-;(provide (all-defined-out)) ;; so we can put tests in a second file
+#lang racket
+(provide (all-defined-out)) ;; so we can put tests in a second file
 
 ;; definition of structures for NUMEX programs
 
@@ -72,11 +73,37 @@
              (int (+ (int-num v1)
                      (int-num v2)))
              (error "NUMEX addition applied to non-number")))]
+        [(islthan? e)
+         (let ([v1 (eval-under-env (islthan-e1 e) env)]
+               [v2 (eval-under-env (islthan-e2 e) env)])
+           (if (and (int? v1)
+                    (int? v2))
+             (if (< (int-num v1)
+                    (int-num v2))
+               (int 1)
+               (int 0))
+             (error "NUMEX islthan applied to non-number")))]
+        [(ifzero? e)
+         (let ([v1 (eval-under-env (ifzero-e1 e) env)]
+               [v2 (eval-under-env (ifzero-e2 e) env)]
+               [v3 (eval-under-env (ifzero-e3 e) env)])
+           (if (and (int? v1)
+                    (eq? v1 0))
+             v2
+             v3))]
+        [(neg? e)
+         (let ([v (eval-under-env (neg-num e) env)])
+           (if (int? v)
+             (int (- 0 (int-num v)))
+             (error "NUMEX negation applied to non-number")))]
+
+
         [(int? e)
          (let ([v (int-num e)])
            (if (integer? v)
              e
-             (error "NUMXEX int applied to non-number"]
+             (error "NUMXEX int applied to non-number")))]
+
         ; CHANGE add more cases here
         [#t (error (format "bad NUMEX expression: ~v" e))]))
 
@@ -86,19 +113,19 @@
 
 ; Problem 3
 
-;(define (ifmunit e1 e2 e3) "CHANGE")
+(define (ifmunit e1 e2 e3) "CHANGE")
 
-;(define (mlet* bs e2) "CHANGE")
+(define (mlet* bs e2) "CHANGE")
 
-;(define (ifeq e1 e2 e3 e4) "CHANGE")
+(define (ifeq e1 e2 e3 e4) "CHANGE")
 
 ;; Problem 4
 
-;(define numex-map "CHANGE")
+(define numex-map "CHANGE")
 
-;(define numex-mapAddN
- ; (mlet "map" numex-map
-  ;      "CHANGE (notice map is now in NUMEX scope)"))
+(define numex-mapAddN
+  (mlet "map" numex-map
+        "CHANGE (notice map is now in NUMEX scope)"))
 
 ;; Challenge Problem
 
