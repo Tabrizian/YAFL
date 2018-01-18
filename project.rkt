@@ -141,6 +141,9 @@
            (if (integer? v)
              e
              (error "NUMXEX int applied to non-number")))]
+        [(mlet? e)
+         (let ([value (eval-under-env (mlet-e1 e) env)])
+           (eval-under-env (mlet-e2 e) (cons (cons (mlet-s e) value) env)))]
         [(munit? e)
          (munit)]
 
