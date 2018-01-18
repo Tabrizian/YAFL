@@ -6,29 +6,32 @@
 
 ;; definition of structures for NUMEX programs
 
+;; Data types
 (struct int  (num)    #:transparent)  ;; a constant number, e.g., (int 17)
 (struct var  (string)    #:transparent)
+
+;; Operations
 (struct add  (e1 e2)  #:transparent)  ;; add two expressions
 (struct mult (e1 e2)  #:transparent)  ;; multiply two expressions
 (struct neg  (num)    #:transparent)
 
-
+;; Branching and conditions
 (struct islthan (e1 e2)    #:transparent)
 (struct ifzero (e1 e2 e3)    #:transparent)
 (struct ifgthan (e1 e2 e3 e4)    #:transparent)
 
 (struct mlet (s e1 e2)    #:transparent)
 
+;; Pair related
+(struct apair (e1 e2)    #:transparent)
+(struct first (e) #:transparent)
+(struct second (e) #:transparent)
 
-(struct apair (head tail) #:transparent)
-(struct first (e1) #:transparent)
-(struct second (e1) #:transparent)
-
-
+;; Function calls
 (struct fun  (nameopt formal body) #:transparent) ;; a recursive(?) 1-argument function
 (struct call (funexp actual)       #:transparent) ;; function call
 
-
+;; Null value handling
 (struct munit   ()      #:transparent) ;; unit value -- good for ending a list
 (struct ismunit (e)     #:transparent) ;; if e1 is unit then 1 else 0
 
@@ -41,11 +44,14 @@
 
 (define (racketlist->numexlist xs)
   (cond [(null? xs) (munit)]
-        [else       (apair (car xs) (racketlist->numexlist (cdr xs)))]))
+        [else
+          (apair (car xs) (racketlist->numexlist (cdr xs)))]))
 
 (define (numexlist->racketlist xs)
-  (cond [(equal? xs munit) null]
-        [else       (cons (apair-head xs) (numexlist->racketlist (apair-tail xs)))]))
+  (cond [(munit? xs) null]
+        [else
+          (cons (apair-e1 xs) (numexlist->racketlist (apair-e2 xs)))]))
+
 
 
 
@@ -55,8 +61,9 @@
 ;; Complete this function
 (define (envlookup env str)
   (cond [(null? env) (error "unbound variable during evaluation" str)]
-  		[else "CHANGE"]
-		))
+        [(eq? (car (car env)) str) (cdr (car env))]
+        [else (envlookup (cdr env) str)]
+        ))
 
 ; Do NOT change the two cases given to you.
 ; DO add more cases for other kinds of NUMEX expressions.
@@ -73,6 +80,14 @@
              (int (+ (int-num v1)
                      (int-num v2)))
              (error "NUMEX addition applied to non-number")))]
+        [(mult? e)
+         (let ([v1 (eval-under-env (mult-e1 e) env)]
+               [v2 (eval-under-env (mult-e2 e) env)])
+           (if (and (int? v1)
+                    (int? v2))
+             (int (* (int-num v1)
+                     (int-num v2)))
+             (error "NUMEX addition applied to non-number")))]
         [(islthan? e)
          (let ([v1 (eval-under-env (islthan-e1 e) env)]
                [v2 (eval-under-env (islthan-e2 e) env)])
@@ -84,25 +99,51 @@
                (int 0))
              (error "NUMEX islthan applied to non-number")))]
         [(ifzero? e)
-         (let ([v1 (eval-under-env (ifzero-e1 e) env)]
-               [v2 (eval-under-env (ifzero-e2 e) env)]
-               [v3 (eval-under-env (ifzero-e3 e) env)])
+         (let ([v1 (eval-under-env (ifzero-e1 e) env)])
+           (if (int? v1)
+             (if (eq? (int-num v1) 0)
+               (eval-under-env (ifzero-e2 e) env)
+               (eval-under-env (ifzero-e3 e) env))
+             (error "Bad argument for ifzero")
+             ))]
+        [(first? e)
+         (let ([v1 (eval-under-env (first-e e) env)])
+           (if (apair? v1)
+             (apair-e1 v1)
+             (error ("NUMEX is not apair"))
+             ))]
+        [(second? e)
+         (let ([v1 (eval-under-env (second-e e) env)])
+           (if (apair? v1)
+             (apair-e2 v1)
+             (error ("NUMEX is not apair"))
+             ))]
+        [(apair? e)
+         (let ([v1 (eval-under-env (apair-e1 e) env)]
+               [v2 (eval-under-env (apair-e2 e) env)])
+           (apair v1 v2))]
+        [(ifgthan? e)
+         (let ([v1 (eval-under-env (ifgthan-e1 e) env)]
+               [v2 (eval-under-env (ifgthan-e2 e) env)])
            (if (and (int? v1)
-                    (eq? v1 0))
-             v2
-             v3))]
+                    (int? v2))
+             (if (> (int-num v1) (int-num v2))
+               (eval-under-env (ifgthan-e3 e) env)
+               (eval-under-env (ifgthan-e4 e) env))
+             (error "NUMEX islthan applied to non-number")))]
         [(neg? e)
          (let ([v (eval-under-env (neg-num e) env)])
            (if (int? v)
              (int (- 0 (int-num v)))
              (error "NUMEX negation applied to non-number")))]
-
-
         [(int? e)
          (let ([v (int-num e)])
            (if (integer? v)
              e
              (error "NUMXEX int applied to non-number")))]
+        [(munit? e)
+         (munit)]
+
 
         ; CHANGE add more cases here
         [#t (error (format "bad NUMEX expression: ~v" e))]))
@@ -141,4 +182,4 @@
 
 ;; Do NOT change this
 ;(define (eval-exp-c e)
- ; (eval-under-env-c (compute-free-vars e) null))
+; (eval-under-env-c (compute-free-vars e) null))
